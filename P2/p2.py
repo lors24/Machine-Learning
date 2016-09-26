@@ -37,7 +37,6 @@ def poli(x,n):
 def cos(x,n):
     return np.cos(math.pi*x*n)
 
-       
     
     
     
