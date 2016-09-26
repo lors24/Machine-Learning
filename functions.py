@@ -8,6 +8,7 @@ Created on Mon Sep 26 15:07:02 2016
 import numpy.linalg as npl
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 
 def poli(x,n):
     return x**n
@@ -59,5 +60,20 @@ def SSE(w,L):
     basis = L.get('basis',poli)
     y_pred = np.dot(phi(X,M,basis),w)  
     w_t = np.matrix.transpose(w)
-    return np.dot(np.matrix.transpose(Y-y_pred),Y-y_pred) + l*np.dot(w_t,w)   
+    res = np.dot(np.matrix.transpose(Y-y_pred),Y-y_pred) + l*np.dot(w_t,w)
+    return res[0,0]   
     
+def eval(X,Y,M = 1, basis = poli, l = 0, plot = False):
+    w = ml_weight(X,Y,M,l=l)
+    dic = {'X':X, 'Y': Y, 'M': M, 'l': l, 'basis': basis}
+    
+    if plot == True:
+        x_plot = np.linspace(X.min(),X.max(),100)
+        y_plot = np.dot(phi(x_plot,M,basis),w) 
+        plt.plot(X,Y,'o')
+        plt.plot(x_plot,y_plot)
+        plt.xlabel('x')
+        plt.ylabel('y')
+        plt.show()
+    
+    return w, SSE(w,dic)
