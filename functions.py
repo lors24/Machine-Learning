@@ -11,6 +11,9 @@ import math
 import matplotlib.pyplot as plt
 
 def poli(x,n):
+    ''' 
+    Polinomial basis
+    '''
     return x**n
 
 def phi(X,M,f=poli):
@@ -24,7 +27,7 @@ def phi(X,M,f=poli):
 def cos(x,n):
     return np.cos(math.pi*x*n)
     
-def ml_weight(X,Y,M = 1,basis = poli ,l=0):
+def ml_weight(X,Y,M = 1, l = 0, basis = poli):
     '''
     Calculates the weights for linear regression
     Parameters:
@@ -63,8 +66,14 @@ def SSE(w,L):
     res = np.dot(np.matrix.transpose(Y-y_pred),Y-y_pred) + l*np.dot(w_t,w)
     return res[0,0]   
     
-def eval(X,Y,M = 1, basis = poli, l = 0, plot = False):
-    w = ml_weight(X,Y,M,l=l)
+def eval(X,Y, w = [], M = 1,  l = 0, basis = poli, plot = False):
+    '''Evaluates a single model for given M, l, basis and data.
+    Plots the adjusted model when plot = True
+    Returns the corresponding weights (closed-form solution) and SSE
+    '''
+    if w == []:
+        w = ml_weight(X,Y,M,l=l)
+        
     dic = {'X':X, 'Y': Y, 'M': M, 'l': l, 'basis': basis}
     
     if plot == True:
@@ -77,3 +86,54 @@ def eval(X,Y,M = 1, basis = poli, l = 0, plot = False):
         plt.show()
     
     return w, SSE(w,dic)
+    
+def model_eval(X,Y,M_list,lambda_list, basis = poli):
+    '''
+    Given a training set X,Y and a list of M and lambda values, model_eval
+    the value of the weights for each model.
+    The output is a mxl matrix of lists where m is the number of M values and l is the
+    number of l values. The entry i,j represents the weights for model with M[i] and 
+    lambda[j]]
+    '''
+    aux = []
+    for m in M_list:
+        for ll in lambda_list:
+            w = ml_weight(X,Y,m,ll,basis)
+            aux.append(w)
+    W = np.matrix(aux)
+    return np.reshape(W,(len(M_list),len(lambda_list)))
+    
+def model_select(X,Y,M_list,lambda_list, W, basis = poli):
+    '''
+    Given a validation set X,Y and a list of M and lambda values, and its 
+    corresponding weights obtained in model_eval, model_select returns the SSE
+    for the adjusted model. 
+    W is the matrix obtained in model_eval.
+    The output is a mxl matrix. The entry i,j represents the SSE for model
+    with M[i] and lambda[j]]
+    '''
+    aux = []
+    for i in range(len(M_list)):
+        for j in range(len(lambda_list)):
+            d = {'X':X,'Y':Y,'M':M_list[i],'l':lambda_list[j],'basis':basis}
+            w = W[i,j]
+            res = SSE(w,d)
+            aux.append(res)
+    R = np.matrix(aux)
+    return np.reshape(R,(len(M_list),len(lambda_list)))
+        
+def train(train_data, val_data, M_list, lambda_list, basis = poli):
+    '''
+    Optimizes the parameterse in the training data and later evaluates
+    in the validation data for a given grid of M and lambda values.
+    Recibes train_data and val_data as tuples with X,Y values
+    '''
+    W = model_eval(train_data[0],train_data[1],M_list,lambda_list, basis = poli)
+    SSE = model_select(val_data[0],val_data[1],M_list,lambda_list, W, basis = poli)
+    
+    #Create a grid for helping read the results
+    
+    g = np.matrix(['M: ' + str(i) + "lambda: " + str(j) for i in M_list for j in lambda_list])
+    grid = np.reshape(g,(len(M_list),len(lambda_list)))
+    
+    return W,SSE,grid
