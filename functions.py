@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 # Some basis functions  
 
 
-def central_difference(f,x,h): 
+def central_difference(f,x,h = 1e-07): 
     '''Using central difference to approximate the gradient of a function f:R^n->R
     at point x.
     '''
@@ -57,7 +57,7 @@ def phi(X,M,f=poli):
             phi_m[i,j] = f(X[i],j)
     return phi_m
     
-def ml_weight(X, Y, M = 1, l = 0, basis = poli):
+def ml_weight(X, Y, M = 1, basis = poli):
     '''
     Calculates the weights for linear regression
     Parameters:
@@ -69,9 +69,33 @@ def ml_weight(X, Y, M = 1, l = 0, basis = poli):
     '''
     m = phi(X,M,basis)  
     m_t = np.matrix.transpose(m)
-    p1 = npl.inv(l*np.eye(M+1) + np.dot(m_t,m))
+    p1 = npl.inv(np.dot(m_t,m))
     p2 = np.dot(m_t,Y)
     return np.dot(p1,p2)
+    
+def ridge(X, Y, M = 1, alfa = 1, basis = poli):
+    '''
+    Calculates the weights for ridge regression
+    The procedure centers the data before performing ridge
+    Parameters:
+    X: vector of Nx1
+    Y: target vector of Nx1
+    M: dimensions of the function basis
+    basis: class of the basis. Default basis set to polinomial.
+    l: lambda for regularization. If omitted is assumed to be 0
+    OUTPUT:
+    w: estimated weights
+    w0: bias used for prediction on uncentered new data
+    '''
+    m = phi(X,M,basis)[:,1:]  
+    m_c = m - m.mean(axis=0)
+    m_t = np.matrix.transpose(m_c)
+    p1 = npl.inv(alfa*np.eye(M) + np.dot(m_t,m_c))
+    p2 = np.dot(m_t,Y-Y.mean())
+    w = np.dot(p1,p2)
+    w0 = Y.mean()-np.dot(np.matrix.transpose(w),m.mean(axis=0))
+    
+    return w, w0
         
 def SSE(X,Y,w,M,l = 0, basis = poli):
     '''
@@ -115,16 +139,14 @@ def SSE_grad(X,Y,w,M = 1,l = 0, basis = poli):
         
     return grad_SSE
     
-#h = 1e-05*np.ones(len(w))    
-    
-    
+   
 def evaluate(X,Y,M = 1, w = [], l = 0, basis = poli, plot = False, f = None):
     '''Evaluates a single model for given M, l, basis and data.
     Plots the adjusted model when plot = True
     Returns the corresponding weights (closed-form solution) and SSE
     '''
     if w == []:
-        w = ml_weight(X,Y,M,l=l)
+        w = ml_weight(X,Y,M,basis)
         
     f_SSE = SSE(X,Y,w,M,l,basis)
     
