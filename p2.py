@@ -11,12 +11,15 @@ import matplotlib.pyplot as plt
 import math
 import functions as f
 
-data = getData(ifPlotData=False)
+data = getData(ifPlotData=True)
 
 X = data[0][:,None]
 Y = data[1][:,None] 
      
-w = f.ml_weight(X,Y,10)    
+M = 10
+w = f.ml_weight(X,Y,M)    
+
+f.evaluate(X,Y,M,plot = True, f = q2)
 
 #x = np.arange(0,1,.02)
 

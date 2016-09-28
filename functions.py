@@ -10,31 +10,64 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 
+
+# Some basis functions   
+
+def central_difference(f,x,params): #pending review
+    '''Using central difference to approximate the gradient of a function f:R^n->R
+    '''
+    h = 1e-01
+    n = len(x)
+    g = np.zeros((n,1))
+    for i in range(n):
+        x1 = np.copy(x)
+        x2 = np.copy(x)
+        x1[i] = x1[i] + h
+        x2[i] = x2[i] - h
+        fx1 = f(x1, params)
+        fx2 = f(x2, params)
+        g[i] = (fx1-fx2)/(2*h)   
+    return g
+    
 def poli(x,n):
     ''' 
     Polinomial basis
     '''
-    return x**n
+    return x**n    
+     
+def cos(x,n):
+    return np.cos(math.pi*x*n)
+    
+def q2(x):
+    return np.cos(x*math.pi)+np.cos(x*2*math.pi)    
+
+# Linear regression 
 
 def phi(X,M,f=poli):
+    '''
+    Map X to the basis function determined by f with dimension M.
+    Input: 
+    X: vector of nx1
+    M: maximum order of the basis (2 for polinomial implies 1, x, x^2)
+    f: basis function
+    Output:
+    nx(M+1) desisgn matrix (Bishop 3.16)
+    '''
     n = len(X)
     phi_m = np.zeros((n,M+1))
     for i in range(n):
         for j in range(M+1):
             phi_m[i,j] = f(X[i],j)
     return phi_m
-     
-def cos(x,n):
-    return np.cos(math.pi*x*n)
     
-def ml_weight(X,Y,M = 1, l = 0, basis = poli):
+def ml_weight(X, Y, M = 1, l = 0, basis = poli):
     '''
     Calculates the weights for linear regression
     Parameters:
-    X: vecotr of Nx1
+    X: vector of Nx1
     Y: target vector of Nx1
     M: dimensions of the function basis
-    basis: class of the basis
+    basis: class of the basis. Default basis set to polinomial.
     l: lambda for regularization. If omitted is assumed to be 0
     '''
     m = phi(X,M,basis)  
@@ -65,8 +98,16 @@ def SSE(w,L):
     w_t = np.matrix.transpose(w)
     res = np.dot(np.matrix.transpose(Y-y_pred),Y-y_pred) + l*np.dot(w_t,w)
     return res[0,0]   
+
+def SSE_grad(X,Y,w): #check
+    phi_mat = phi(X,M)
+    y_pred = np.dot(phi_mat,w)  
+    return -2*np.dot(np.matrix.transpose(phi_mat),np.matrix.transpose(Y-y_pred))
     
-def eval(X,Y, w = [], M = 1,  l = 0, basis = poli, plot = False):
+#h = 1e-05*np.ones(len(w))    
+    
+    
+def evaluate(X,Y,M = 1, w = [], l = 0, basis = poli, plot = False, f = None):
     '''Evaluates a single model for given M, l, basis and data.
     Plots the adjusted model when plot = True
     Returns the corresponding weights (closed-form solution) and SSE
@@ -78,9 +119,12 @@ def eval(X,Y, w = [], M = 1,  l = 0, basis = poli, plot = False):
     
     if plot == True:
         x_plot = np.linspace(X.min(),X.max(),100)
-        y_plot = np.dot(phi(x_plot,M,basis),w) 
+        y_plot = np.dot(phi(x_plot,M,basis),w)      
         plt.plot(X,Y,'o')
         plt.plot(x_plot,y_plot)
+        if f != None:
+            y_true= f(x_plot) 
+            plt.plot(x_plot,y_true)
         plt.xlabel('x')
         plt.ylabel('y')
         plt.show()
