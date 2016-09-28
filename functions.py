@@ -95,9 +95,9 @@ def ridge(X, Y, M = 1, alfa = 1, basis = poli):
     w = np.dot(p1,p2)
     w0 = Y.mean()-np.dot(np.matrix.transpose(w),m.mean(axis=0))
     
-    return w, w0
+    return np.vstack((w0,w))
         
-def SSE(X,Y,w,M,l = 0, basis = poli):
+def SSE(X,Y,w,M,l=0, basis = poli):
     '''
     Sum of squared erros
     X: X vector of Nx1
@@ -113,9 +113,9 @@ def SSE(X,Y,w,M,l = 0, basis = poli):
     '''
     def fun_SSE(w):
          y_pred = np.dot(phi(X,M,basis),w)  
-         w_t = np.matrix.transpose(w)
-         res = np.dot(np.matrix.transpose(Y-y_pred),Y-y_pred) + l*np.dot(w_t,w)
-         return res[0]
+         w_t = np.matrix.transpose(w[1:])
+         res = np.dot(np.matrix.transpose(Y-y_pred),Y-y_pred) + l*np.dot(w_t,w[1:])
+         return res[0,0]
     return fun_SSE   
 
 def SSE_grad(X,Y,w,M = 1,l = 0, basis = poli): 
@@ -137,17 +137,14 @@ def SSE_grad(X,Y,w,M = 1,l = 0, basis = poli):
         #w_t = np.matrix.transpose(w)
         return -2*np.dot(np.matrix.transpose(phi(X,M,basis)),(Y-y_pred))
         
-    return grad_SSE
-    
+    return grad_SSE  
    
-def evaluate(X,Y,M = 1, w = [], l = 0, basis = poli, plot = False, f = None):
+def evaluate(X,Y,M, w, l = 0, 
+             basis = poli, plot = False, f = None):
     '''Evaluates a single model for given M, l, basis and data.
     Plots the adjusted model when plot = True
-    Returns the corresponding weights (closed-form solution) and SSE
-    '''
-    if w == []:
-        w = ml_weight(X,Y,M,basis)
-        
+    Returns the corresponding SSE
+    '''    
     f_SSE = SSE(X,Y,w,M,l,basis)
     
     if plot == True:
@@ -162,7 +159,7 @@ def evaluate(X,Y,M = 1, w = [], l = 0, basis = poli, plot = False, f = None):
         plt.ylabel('y')
         plt.show()
     
-    return w, f_SSE(w)
+    return f_SSE(w)
     
 def model_eval(X,Y,M_list,lambda_list, basis = poli):
     '''

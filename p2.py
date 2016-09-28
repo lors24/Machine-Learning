@@ -20,14 +20,18 @@ M = 2
 w = fun.ml_weight(X,Y,M)   
 
 
-#fun.evaluate(X,Y,M,w, plot = True, f = fun.q2)
+fun.evaluate(X,Y,M,w, plot = True, f = fun.q2)
 
 #Check gradient
 
-w2, res = fun.evaluate(X,Y,8,basis = fun.cos, plot = True, f = fun.q2)
+#w2, res = fun.evaluate(X,Y,8,basis = fun.cos, plot = True, f = fun.q2)
 
 #P3
 
-wr,wr0 = fun.ridge(X,Y,M) 
-
+M = 4
+l = 1
+wr = fun.ridge(X,Y,M,l) 
+sse = fun.SSE(X,Y,wr,M,l)
+s = sse(wr)
+fun.evaluate(X,Y,M,wr, l, plot = True, f = fun.q2)
 
