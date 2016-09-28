@@ -19,7 +19,7 @@ Y = data[1][:,None]
 M = 10
 w = f.ml_weight(X,Y,M)    
 
-f.evaluate(X,Y,M,plot = True, f = q2)
+f = f.evaluate(X,Y,M,w, plot = True, f = f.q2)
 
 #x = np.arange(0,1,.02)
 

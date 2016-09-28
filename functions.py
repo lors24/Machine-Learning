@@ -11,23 +11,20 @@ import math
 import matplotlib.pyplot as plt
 
 
-# Some basis functions   
+# Some basis functions  
 
-def central_difference(f,x,params): #pending review
+
+def central_difference(f,x,h): 
     '''Using central difference to approximate the gradient of a function f:R^n->R
+    at point x.
     '''
-    h = 1e-01
     n = len(x)
-    g = np.zeros((n,1))
+    m = np.zeros([n,1])
     for i in range(n):
-        x1 = np.copy(x)
-        x2 = np.copy(x)
-        x1[i] = x1[i] + h
-        x2[i] = x2[i] - h
-        fx1 = f(x1, params)
-        fx2 = f(x2, params)
-        g[i] = (fx1-fx2)/(2*h)   
-    return g
+        h0 = np.asmatrix(np.zeros([n,1]))
+        h0[i] += h
+        m[i] = (f(x + h0) - f(x-h0))/(2*h)
+    return np.matrix(m)
     
 def poli(x,n):
     ''' 
@@ -75,34 +72,48 @@ def ml_weight(X, Y, M = 1, l = 0, basis = poli):
     p1 = npl.inv(l*np.eye(M+1) + np.dot(m_t,m))
     p2 = np.dot(m_t,Y)
     return np.dot(p1,p2)
-    
-def SSE(w,L):
+        
+def SSE(X,Y,w,M,l = 0, basis = poli):
     '''
+    Sum of squared erros
+    X: X vector of Nx1
+    Y = target vector of Nx1   
     Calculate sum of square residuals.
     w: column vector resulting that represents the weights 
-    L is a dictinoary with the following values:
-    'X': X vector of Nx1
-    'Y' = target vector of Nx1    
     OPTIONAL:
-    'M': dimension of the basis, otherwsie it assumes 1
-    'basis': basis por the transformation, otherwise it assumes poli
-    'l': lambda for regularization, otherwise it assumes 0
+    M: dimension of the basis, otherwsie it assumes 1
+    basis: basis por the transformation, otherwise it assumes poli
+    l: lambda for regularization, otherwise it assumes 0
+    OUTPUT:
+    function of SSE that only depends on 
     '''
-    #Extract parameters
-    X = L.get('X')
-    Y = L.get('Y')
-    M = L.get('M',1)
-    l = L.get('l',0) 
-    basis = L.get('basis',poli)
-    y_pred = np.dot(phi(X,M,basis),w)  
-    w_t = np.matrix.transpose(w)
-    res = np.dot(np.matrix.transpose(Y-y_pred),Y-y_pred) + l*np.dot(w_t,w)
-    return res[0,0]   
+    def fun_SSE(w):
+         y_pred = np.dot(phi(X,M,basis),w)  
+         w_t = np.matrix.transpose(w)
+         res = np.dot(np.matrix.transpose(Y-y_pred),Y-y_pred) + l*np.dot(w_t,w)
+         return res[0]
+    return fun_SSE   
 
-def SSE_grad(X,Y,w): #check
-    phi_mat = phi(X,M)
-    y_pred = np.dot(phi_mat,w)  
-    return -2*np.dot(np.matrix.transpose(phi_mat),np.matrix.transpose(Y-y_pred))
+def SSE_grad(X,Y,w,M = 1,l = 0, basis = poli): 
+    '''
+    Gradient for the sum of squared errors
+    X: X vector of Nx1
+    Y = target vector of Nx1   
+    Calculate sum of square residuals.
+    w: column vector resulting that represents the weights 
+    OPTIONAL:
+    M: dimension of the basis, otherwsie it assumes 1
+    basis: basis por the transformation, otherwise it assumes poli
+    l: lambda for regularization, otherwise it assumes 0
+    OUTPUT:
+    function of SSE that only depends on 
+    '''
+    def grad_SSE(w):       
+        y_pred = np.dot(phi(X,M,basis),w)  
+        #w_t = np.matrix.transpose(w)
+        return -2*np.dot(np.matrix.transpose(phi(X,M,basis)),(Y-y_pred))
+        
+    return grad_SSE
     
 #h = 1e-05*np.ones(len(w))    
     
@@ -115,7 +126,7 @@ def evaluate(X,Y,M = 1, w = [], l = 0, basis = poli, plot = False, f = None):
     if w == []:
         w = ml_weight(X,Y,M,l=l)
         
-    dic = {'X':X, 'Y': Y, 'M': M, 'l': l, 'basis': basis}
+    f_SSE = SSE(X,Y,w,M,l,basis)
     
     if plot == True:
         x_plot = np.linspace(X.min(),X.max(),100)
@@ -129,7 +140,7 @@ def evaluate(X,Y,M = 1, w = [], l = 0, basis = poli, plot = False, f = None):
         plt.ylabel('y')
         plt.show()
     
-    return w, SSE(w,dic)
+    return w, f_SSE(w)
     
 def model_eval(X,Y,M_list,lambda_list, basis = poli):
     '''

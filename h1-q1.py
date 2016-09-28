@@ -43,15 +43,7 @@ def finiteDif(f,h):
         n = len(a)
         p = len(x)
         m = np.zeros([n,p])
-        if n > 1:
-            for i in xrange(n):
-                for j in xrange(p):
-                    h0 = np.zeros([n,1])
-                    h0[j] += np.matrix(h)/2
-                    m[i][j] = (f(x + h0)[i] - f(x-h0)[i])/h
-
-        else:
-            for j in xrange(p):
+        for j in range(p):
                 h0 = np.asmatrix(np.zeros([p,1]))
                 h0[j][0] += h/2
                 m[0][j] = (f(x + h0) - f(x-h0))/h
