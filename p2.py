@@ -28,8 +28,8 @@ fun.evaluate(X,Y,M,w, plot = True, f = fun.q2)
 
 #P3
 
-M = 4
-l = 1
+M = 2
+l = 0
 wr = fun.ridge(X,Y,M,l) 
 sse = fun.SSE(X,Y,wr,M,l)
 s = sse(wr)

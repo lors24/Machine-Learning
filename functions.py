@@ -36,7 +36,19 @@ def cos(x,n):
     return np.cos(math.pi*x*n)
     
 def q2(x):
-    return np.cos(x*math.pi)+np.cos(x*2*math.pi)    
+    return np.cos(x*math.pi)+np.cos(x*2*math.pi)   
+    
+def basis_sin(x,n):
+    if n == 0:
+        return x
+    else:
+        return math.sin(0.4*math.pi*x*n)
+        
+def q4(w):
+    def f4(x):
+        phi_val = phi(x, 12, basis_sin)
+        return np.dot(phi_val,w)
+    return f4
 
 # Linear regression 
 
@@ -69,11 +81,11 @@ def ml_weight(X, Y, M = 1, basis = poli):
     '''
     m = phi(X,M,basis)  
     m_t = np.matrix.transpose(m)
-    p1 = npl.inv(np.dot(m_t,m))
+    p1 = npl.pinv(np.dot(m_t,m))
     p2 = np.dot(m_t,Y)
     return np.dot(p1,p2)
     
-def ridge(X, Y, M = 1, alfa = 1, basis = poli):
+def ridge(X, Y, M = 1, alpha = 1, basis = poli):
     '''
     Calculates the weights for ridge regression
     The procedure centers the data before performing ridge
@@ -90,7 +102,7 @@ def ridge(X, Y, M = 1, alfa = 1, basis = poli):
     m = phi(X,M,basis)[:,1:]  
     m_c = m - m.mean(axis=0)
     m_t = np.matrix.transpose(m_c)
-    p1 = npl.inv(alfa*np.eye(M) + np.dot(m_t,m_c))
+    p1 = npl.pinv(alpha*np.eye(M) + np.dot(m_t,m_c))
     p2 = np.dot(m_t,Y-Y.mean())
     w = np.dot(p1,p2)
     w0 = Y.mean()-np.dot(np.matrix.transpose(w),m.mean(axis=0))
