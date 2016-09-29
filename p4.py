@@ -9,6 +9,8 @@ import sklearn.linear_model as skls
 import lassoData
 import pylab as pl
 import functions as fun
+import matplotlib.pyplot as plt
+import numpy as np
 
 train = lassoData.lassoTrainData()
 val = lassoData.lassoValData()
@@ -18,29 +20,40 @@ true_w = pl.loadtxt('lasso_true_w.txt') #True value for the data
 
 #Step 1: transform data
 
-alpha = 0.2
-M = 12
-
-
 X = train[0]
-Xm = fun.phi(train[0],M,fun.basis_sin)
 Y = train[1]
-Xc = Xm-Xm.mean(axis=0)
-Yc = Y - Y.mean()
-lasso = skls.Lasso(alpha=alpha, fit_intercept = False)
-lasso.fit(Xc,Yc)
+
+(Xc,Yc) = fun.center_data(X,Y)
+
+w1 = compare(X,Y,M=12,alpha=0.2,basis = fun.basis_sin)
+
 
 #alpha 0.2
 
-#Compare with ridge
+#Compare with ridgefu
 
-wr = fun.ridge(X,Y,12,0.0,basis_sin) 
-sse = fun.SSE(X,Y,wr,M, l = alpha)
-s = sse(wr)
+alpha = 0.2
 
-fun.evaluate(X,Y,12,wr, alpha, plot = True)
-
+#wr = fun.ridge(Xc,Yc,1,alpha) 
+#ridge = skls.Ridge(alpha = alpha, fit_intercept = False)
+#ridge.fit(Xc,Yc)
+#w_r = ridge.coef_
 
 #OlS
 
-w_ols = ml_weight(X, Y, M = 12, basis = basis_sin)
+w_ols = ml_weight(Xc, Yc, M = 12, basis = basis_sin)
+
+#compare
+
+
+#Ridge from skl and 
+
+w_ridge = fun.ridge(X,Y,M=12,basis = basis_sin, alpha = 0)
+
+#linear = skl.LinearRegression(fit_intercept = False)
+#linear.coef_
+#linear.fit(Xc,Yc)
+
+#plt.bar(np.arange(1,14),w_ols, color = 'cyan')
+#plt.xlim(1,14)
+#plt.xticks(np.linspace(1,13,1))

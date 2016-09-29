@@ -9,9 +9,29 @@ import numpy.linalg as npl
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+import scipy.linalg as scila
+import sklearn.linear_model as skls
 
 
 # Some basis functions  
+
+def gradient_descent(f,f_prime,x0,step,treshold = 1e-8,maxiter = 500):
+    '''
+    Performs gradient descent
+    k controls the number of iterations
+    '''
+    x = x0
+    k = 0
+    f_evals = [f(x)]
+    delta = 1
+    while delta > treshold and k < maxiter:
+        k += 1
+        x_1 = np.copy(x)
+        x = x - step *f_prime(x)
+        f_evals.append(f(x))
+        delta = np.linalg.norm(f(x)-f(x_1))
+    f_delta = np.array(f_evals)
+    return x, k, f_delta
 
 
 def central_difference(f,x,h = 1e-07): 
@@ -67,7 +87,7 @@ def phi(X,M,f=poli):
     for i in range(n):
         for j in range(M+1):
             phi_m[i,j] = f(X[i],j)
-    return phi_m
+    return np.matrix(phi_m)
     
 def ml_weight(X, Y, M = 1, basis = poli):
     '''
@@ -79,11 +99,11 @@ def ml_weight(X, Y, M = 1, basis = poli):
     basis: class of the basis. Default basis set to polinomial.
     l: lambda for regularization. If omitted is assumed to be 0
     '''
-    m = phi(X,M,basis)  
-    m_t = np.matrix.transpose(m)
-    p1 = npl.pinv(np.dot(m_t,m))
-    p2 = np.dot(m_t,Y)
-    return np.dot(p1,p2)
+    if np.shape(X)[1] == 1:
+        m = phi(X,M,basis)  
+    else:
+        m = X
+    return np.dot(scila.pinv(m),Y)
     
 def ridge(X, Y, M = 1, alpha = 1, basis = poli):
     '''
@@ -102,14 +122,14 @@ def ridge(X, Y, M = 1, alpha = 1, basis = poli):
     m = phi(X,M,basis)[:,1:]  
     m_c = m - m.mean(axis=0)
     m_t = np.matrix.transpose(m_c)
-    p1 = npl.pinv(alpha*np.eye(M) + np.dot(m_t,m_c))
+    p1 = scila.pinv(alpha*np.eye(M) + np.dot(m_t,m_c))
     p2 = np.dot(m_t,Y-Y.mean())
     w = np.dot(p1,p2)
-    w0 = Y.mean()-np.dot(np.matrix.transpose(w),m.mean(axis=0))
+    w0 = Y.mean()-np.dot(m.mean(axis=0),w)
     
     return np.vstack((w0,w))
         
-def SSE(X,Y,w,M,l=0, basis = poli):
+def SSE(X,Y,M,l=0, basis = poli):
     '''
     Sum of squared erros
     X: X vector of Nx1
@@ -130,7 +150,7 @@ def SSE(X,Y,w,M,l=0, basis = poli):
          return res[0,0]
     return fun_SSE   
 
-def SSE_grad(X,Y,w,M = 1,l = 0, basis = poli): 
+def SSE_grad(X,Y,M = 1, basis = poli): 
     '''
     Gradient for the sum of squared errors
     X: X vector of Nx1
@@ -146,32 +166,46 @@ def SSE_grad(X,Y,w,M = 1,l = 0, basis = poli):
     '''
     def grad_SSE(w):       
         y_pred = np.dot(phi(X,M,basis),w)  
-        #w_t = np.matrix.transpose(w)
-        return -2*np.dot(np.matrix.transpose(phi(X,M,basis)),(Y-y_pred))
-        
+        return -2*np.dot(np.matrix.transpose(phi(X,M,basis)),(Y-y_pred))      
     return grad_SSE  
+    
+def eval_reg(X,Y,M = 1, basis = poli, plot = False, f = None):
+    w = ml_weight(X, Y, M, basis)
+    sse = SSE(X,Y,M,basis = basis)
+    if plot == True:
+        graph_reg(X,Y,M,w,basis = basis,f = f)
+    return sse(w)
    
-def evaluate(X,Y,M, w, l = 0, 
-             basis = poli, plot = False, f = None):
+def graph_reg(X,Y,M, w, l = 0, 
+             basis = poli,f = None):
     '''Evaluates a single model for given M, l, basis and data.
     Plots the adjusted model when plot = True
     Returns the corresponding SSE
-    '''    
-    f_SSE = SSE(X,Y,w,M,l,basis)
+    '''        
+    x_plot = np.linspace(X.min(),X.max(),100)
+    y_plot = np.dot(phi(x_plot,M,basis),w)      
+    plt.plot(X,Y,'o')
+    plt.plot(x_plot,y_plot)
+    if f != None:
+        y_true= f(x_plot) 
+        plt.plot(x_plot,y_true)
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.title('M = ' + str(M))
+    plt.show()
     
-    if plot == True:
-        x_plot = np.linspace(X.min(),X.max(),100)
-        y_plot = np.dot(phi(x_plot,M,basis),w)      
-        plt.plot(X,Y,'o')
-        plt.plot(x_plot,y_plot)
-        if f != None:
-            y_true= f(x_plot) 
-            plt.plot(x_plot,y_true)
-        plt.xlabel('x')
-        plt.ylabel('y')
-        plt.show()
+def check_grad(X,Y,M,t):
+    ''' 
+    Compares closed-form solution of the gradient with central approximation
+    '''
+    gSSE = SSE_grad(X,Y,M)
+    w_ml = ml_weight(X,Y,M)
+    w0 = w_ml*t
+    a = gSSE(w0)
+    fSSE = SSE(X,Y,M)
+    b = central_difference(fSSE,w0)
+    return a, b, npl.norm(a-b)
     
-    return f_SSE(w)
     
 def model_eval(X,Y,M_list,lambda_list, basis = poli):
     '''
@@ -223,3 +257,22 @@ def train(train_data, val_data, M_list, lambda_list, basis = poli):
     grid = np.reshape(g,(len(M_list),len(lambda_list)))
     
     return W,SSE,grid
+
+def compare(X,Y,M=12,alpha=1,basis = basis_sin):
+    Xm = phi(X,M,basis)
+    Xc = Xm-Xm.mean(axis=0)
+    Yc = Y - Y.mean()
+    lasso = skls.Lasso(alpha=alpha, fit_intercept = False)
+    ridge = skls.Ridge(alpha = alpha, fit_intercept = False)
+    lasso.fit(Xc,Yc)
+    ridge.fit(Xc,Yc)
+    w_l = lasso.coef_
+    w_r = ridge.coef_
+    return (w_l, w_r)
+    
+def center_data(X,Y,M = 12, basis = basis_sin):
+    Xm = phi(X,M,basis)
+    Xc = Xm-Xm.mean(axis=0)
+    Yc = Y - Y.mean()
+    return (Xc,Yc)
+
