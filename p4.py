@@ -25,8 +25,28 @@ Y = train[1]
 
 (Xc,Yc) = fun.center_data(X,Y)
 
-w1 = compare(X,Y,M=12,alpha=0.2,basis = fun.basis_sin)
+alpha = 0.2
+fig = plt.figure()
+fig.add_subplot(121)
+w1 = fun.compare(X,Y,M=12,alpha=alpha,basis = fun.basis_sin)
+plt.bar(range(13),w1[0], color = 'teal')
+plt.title('LASSO')
+fig.add_subplot(122)
+plt.bar(range(13),w1[1], color = 'purple')
+plt.title('ridge')
+plt.show()
 
+fig = plt.figure()
+fig.add_subplot(121)
+plt.plot()
+fig.add_subplot(122)
+
+plt.bar(range(13),w1[0], color = 'teal')
+plt.title('lambda' = alpha)
+plt.plot(range(10),np.ones(10), '--r')
+plt.xticks(np.arange(9) + 0.35, ('0','1','2','3','4','5','6','7','8'))
+plt.title('weight vector for M=8')
+plt.show()
 
 #alpha 0.2
 

@@ -187,9 +187,6 @@ def SGD(J_prime,X,Y,theta0,tol,M =1, basis = poli):
         j_prime = SSE_grad(x,l,M,basis)
         theta = theta - nu(t)*j_prime(theta)
         t += 1
-        if t % 100 == 0 :
-            print(np.linalg.norm(J_prime(theta)/n))
-            print(theta)
     return theta    
     
     
@@ -291,11 +288,9 @@ def compare(X,Y,M=12,alpha=1,basis = basis_sin):
     Xc = Xm-Xm.mean(axis=0)
     Yc = Y - Y.mean()
     lasso = skls.Lasso(alpha=alpha, fit_intercept = False)
-    ridge = skls.Ridge(alpha = alpha, fit_intercept = False)
+    w_r = ridge(X,Y,M,alpha,basis)
     lasso.fit(Xc,Yc)
-    ridge.fit(Xc,Yc)
     w_l = lasso.coef_
-    w_r = ridge.coef_
     return (w_l, w_r)
     
 def center_data(X,Y,M = 12, basis = basis_sin):
