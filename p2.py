@@ -10,6 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import numpy.linalg as npl
 import functions as fun
+import matplotlib.cm as cm
 #from matplotlib import gridspec
 
 data = getData(ifPlotData=True)
@@ -45,11 +46,10 @@ fun.check_grad(X,Y,M = 11,t = 0)
 
 #Plot error
 
-
 SSE_s = np.zeros(11)
 for i in range(11):
     SSE_s[i] = fun.eval_reg(X, Y, i, basis = fun.poli)
-    
+  
 fig = plt.figure()
 fig.add_subplot(121)
 plt.plot(range(11),SSE_s, color = 'green', linewidth = 2)
@@ -61,13 +61,36 @@ plt.plot(np.arange(2,11),SSE_s[2:], linewidth = 2)
 plt.xlabel('M')
 plt.title('SSE for M=2 to M=10')
 plt.show()
-    
+
+#2.3
+
+M = 2
+w0 =np.zeros((M+1,1))
+J = fun.SSE_grad(X,Y,2)
+
+fun.SGD(J,X,Y,w2+1,5e-3,M=2, basis = fun.poli)
 
 
 
 
+#2.4
 
-alpha = 1e-3
+w = fun.ml_weight(X,Y,M=8,basis = fun.cos)
+
+fig = plt.figure()
+fig.add_subplot(121)
+fun.graph_reg(X,Y, 8, w, basis = fun.cos,f = fun.q2, legend = True)
+fig.add_subplot(122)
+plt.bar(range(9),w, color = 'teal')
+plt.plot(range(10),np.ones(10), '--r')
+plt.xticks(np.arange(9) + 0.35, ('0','1','2','3','4','5','6','7','8'))
+plt.title('weight vector for M=8')
+plt.show()
+
+#3.1
+M = 8
+w = fun.ml_weight(X,Y,M)
+w0 = fun.ridge(X,Y,M,alpha = 0)
 
 def plot_ridge(alpha):
     x_plot = np.linspace(0,1,100)
@@ -78,11 +101,45 @@ def plot_ridge(alpha):
         w = fun.ridge(X,Y,i,alpha)
         y_plot = np.dot(fun.phi(x_plot,i),w)  
         plt.plot(x_plot,y_plot,label = 'M = ' + str(i), linewidth = 1.5)
-    #plt.legend(loc = 1, fontsize = 10)
+    plt.legend(loc = 1, fontsize = 10)
     plt.xlabel('x')
     plt.xticks(np.linspace(0,1,5))
     plt.ylabel('y')
-    plt.title('alpha = ' + str(alpha))
+    plt.title('lambda = ' + str(alpha))
+    
+def plot_ridge2(M):
+    x_plot = np.linspace(0,1,100)
+    plt.plot(X,Y,'o', linewidth = 2)
+    y_true= fun.q2(x_plot) 
+    plt.plot(x_plot,y_true, '--',color = 'purple', linewidth = 2, label = 'true function')
+    for i in [1e-7,1e-3,1e-1,1]:
+        w = fun.ridge(X,Y,M,i)
+        y_plot = np.dot(fun.phi(x_plot,M),w)  
+        plt.plot(x_plot,y_plot,label = 'lambda = ' + str(i), linewidth = 1.5)
+    plt.legend(loc = 1, fontsize = 10)
+    plt.xlabel('x')
+    plt.xticks(np.linspace(0,1,5))
+    plt.ylabel('y')
+    plt.title('M = ' + str(M))
+
+plot_ridge(1e-7)
+plot_ridge(1)
+plot_ridge2(10)
+#For M = 10
+
+
+
+
+
+
+    
+w,k = fun.gradient_descent(fSSE, gSSE, w3*0 ,0.05,1e-07, maxiter = 100000)
+    
+
+
+
+
+
 
 
 fig = plt.figure()

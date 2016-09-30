@@ -11,6 +11,7 @@ import math
 import matplotlib.pyplot as plt
 import scipy.linalg as scila
 import sklearn.linear_model as skls
+import random
 
 
 # Some basis functions  
@@ -34,7 +35,7 @@ def gradient_descent(f,f_prime,x0,step,treshold = 1e-8,maxiter = 500):
     return x, k, f_delta
 
 
-def central_difference(f,x,h = 1e-07): 
+def central_difference(f, x, h = 1e-07): 
     '''Using central difference to approximate the gradient of a function f:R^n->R
     at point x.
     '''
@@ -122,7 +123,7 @@ def ridge(X, Y, M = 1, alpha = 1, basis = poli):
     m = phi(X,M,basis)[:,1:]  
     m_c = m - m.mean(axis=0)
     m_t = np.matrix.transpose(m_c)
-    p1 = scila.pinv(alpha*np.eye(M) + np.dot(m_t,m_c))
+    p1 = scila.inv(alpha*np.eye(M) + np.dot(m_t,m_c))
     p2 = np.dot(m_t,Y-Y.mean())
     w = np.dot(p1,p2)
     w0 = Y.mean()-np.dot(m.mean(axis=0),w)
@@ -169,15 +170,39 @@ def SSE_grad(X,Y,M = 1, basis = poli):
         return -2*np.dot(np.matrix.transpose(phi(X,M,basis)),(Y-y_pred))      
     return grad_SSE  
     
-def eval_reg(X,Y,M = 1, basis = poli, plot = False, f = None):
-    w = ml_weight(X, Y, M, basis)
+    
+def nu(t):
+    k = 0.9
+    nu0 = 1e-2
+    return (nu0 + t)**(-k)    
+    
+def SGD(J_prime,X,Y,theta0,tol,M =1, basis = poli):
+    n,m = np.shape(X)
+    theta = theta0
+    t = 1 #step size  
+    while np.linalg.norm(J_prime(theta)/n) > tol:
+        i = random.randint(0,n-1)
+        x = np.transpose(X[i])
+        l = Y[i]
+        j_prime = SSE_grad(x,l,M,basis)
+        theta = theta - nu(t)*j_prime(theta)
+        t += 1
+        if t % 100 == 0 :
+            print(np.linalg.norm(J_prime(theta)/n))
+            print(theta)
+    return theta    
+    
+    
+def eval_reg(X,Y,w = '',M = 1, basis = poli, plot = False, f = None):
+    if w == '':
+        w = ml_weight(X, Y, M, basis)
     sse = SSE(X,Y,M,basis = basis)
     if plot == True:
         graph_reg(X,Y,M,w,basis = basis,f = f)
     return sse(w)
    
-def graph_reg(X,Y,M, w, l = 0, 
-             basis = poli,f = None):
+def graph_reg(X,Y, M, w, l = 0, 
+             basis = poli,f = None, legend = False):
     '''Evaluates a single model for given M, l, basis and data.
     Plots the adjusted model when plot = True
     Returns the corresponding SSE
@@ -185,14 +210,17 @@ def graph_reg(X,Y,M, w, l = 0,
     x_plot = np.linspace(X.min(),X.max(),100)
     y_plot = np.dot(phi(x_plot,M,basis),w)      
     plt.plot(X,Y,'o')
-    plt.plot(x_plot,y_plot)
+    plt.plot(x_plot,y_plot, label = 'M = ' + str(M))
     if f != None:
         y_true= f(x_plot) 
-        plt.plot(x_plot,y_true)
+        plt.plot(x_plot,y_true,label = 'True function')
     plt.xlabel('x')
     plt.ylabel('y')
     plt.title('M = ' + str(M))
-    plt.show()
+    if legend == True:
+        plt.legend(fontsize = 10)
+    else:
+        plt.show()
     
 def check_grad(X,Y,M,t):
     ''' 
@@ -218,7 +246,7 @@ def model_eval(X,Y,M_list,lambda_list, basis = poli):
     aux = []
     for m in M_list:
         for ll in lambda_list:
-            w = ml_weight(X,Y,m,ll,basis)
+            w = ridge(X,Y,m,ll,basis)
             aux.append(w)
     W = np.matrix(aux)
     return np.reshape(W,(len(M_list),len(lambda_list)))
@@ -235,9 +263,9 @@ def model_select(X,Y,M_list,lambda_list, W, basis = poli):
     aux = []
     for i in range(len(M_list)):
         for j in range(len(lambda_list)):
-            d = {'X':X,'Y':Y,'M':M_list[i],'l':lambda_list[j],'basis':basis}
             w = W[i,j]
-            res = SSE(w,d)
+            s = SSE(X,Y,M_list[i],lambda_list[j])
+            res = s(w)
             aux.append(res)
     R = np.matrix(aux)
     return np.reshape(R,(len(M_list),len(lambda_list)))

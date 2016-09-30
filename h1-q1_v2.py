@@ -95,21 +95,10 @@ def nu(t):
     
     SSE_grad(X,Y,M = 1, basis = poli)
     
+#J_prime = SSE_s  
+#X = phi(X)    
     
-def SGD(J_prime,X,Y,theta0,tol):
-    n,m = np.shape(X)
-    theta = theta0
-    t = 1 #step size
-    while np.linalg.norm(J_prime(theta)/n) > tol:
-        i = random.randint(0,n-1)
-        x = np.transpose(X[i])
-        l = Y[i]
-        j_prime = #SSE eval
-        theta = theta - nu(t)*J_prime(theta,x,l)
-        t += 1
-        if t % 100 == 0 :
-            print(np.linalg.norm(J_prime(theta)/n))
-    return theta
+
     
     
 def SGD2(k,criterion):
