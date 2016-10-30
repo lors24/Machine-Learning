@@ -56,7 +56,7 @@ alpha = 0.2
 
 #wr = fun.ridge(Xc,Yc,1,alpha) 
 #ridge = skls.Ridge(alpha = alpha, fit_intercept = False)
-#ridge.fit(Xc,Yc)
+#ridge.fit(Xc,Yc)f
 #w_r = ridge.coef_
 
 #OlS
