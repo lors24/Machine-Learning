@@ -1,0 +1,8 @@
+sizes = [2 3 1];
+[layers, weights, biases] = Network(sizes);
+a = [1;1]; %input
+
+%tr
+for i=1:layers-1
+    a = feedforward(a,weights{i},biases{i},'ReLU');
+end
