@@ -1,24 +1,18 @@
-data = importdata('data_3class.csv');
-[m, n] = size(data);
-data_encode = [data data(:,3)==0 data(:,3)==1 data(:,3)==2];
-%eta = 0.00002;
-tau = 1000000;
-kappa = 0.9;
-max_epoch = 1000;
-F = zeros(max_epoch,2);
+function [ output_args ] = train(data,sizes, tau,kappa,max_epoch)
 
+% [m, ~] = size(data); F = zeros(max_epoch,2); %stores results. First
+% column for objective function and second column for accuracy.
 
-sizes = [2 100 3];
+%Create network
 [L, weights, biases] = Network(sizes);
 
 for e=1:max_epoch
-    order = randperm(m);
-    data_rndm = data_encode(order,:);
+    data_rndm = data(randperm(m),:);
 
-    for k=1:m
-        a = cell(L,1);
-        delta = cell(L-1,1);
+    for k=1:m %for every observation in the training sample
+        a = cell(L,1); %activations
         z = cell(L-1,1);
+               delta = cell(L-1,1);
         gW = cell(L-1,1); %weight gradients
         gb = cell(L-1,1); %bias gradients
         
@@ -33,7 +27,7 @@ for e=1:max_epoch
         %Output layer
         [a{end},z{end}] = feedforward(a{end-1},weights{end},biases{end},'Softmax');
 
-        %Print error    
+        %Print error
         delta{end} = a{end}-target;
 
         for i=L-2:-1:1
@@ -76,3 +70,5 @@ for e=1:max_epoch
 end
 
 plot(1:max_epoch,F)
+end
+
