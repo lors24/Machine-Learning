@@ -1,4 +1,4 @@
-function [out] = feedforward(a,W,b,f)
+function [a,z] = feedforward(a,W,b,f)
 %Input:
 %a: input
 %W: weights
@@ -6,7 +6,7 @@ function [out] = feedforward(a,W,b,f)
 %f : function 
 
 z = W'*a+b;
-out = feval(f,z);
+a = feval(f,z);
 
 
 end
