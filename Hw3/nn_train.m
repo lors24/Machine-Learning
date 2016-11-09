@@ -1,6 +1,7 @@
 function [F] = nn_train(X,Y,Xv,Yv,class,sizes,tau,kappa,max_epoch)
 
 [m, ~] = size(X); %number of training samples
+[n, ~] = size(Xv); %number of validation samples
 
 F = zeros(max_epoch,2); %stores results. First
 % column for objective function and second column for accuracy.
@@ -12,7 +13,7 @@ for e=1:max_epoch
     order = randperm(m);
     Xrnd = X(order,:);
     Yrnd = Y(order,:);
-    classrnd = class(order)+1;
+    %classrnd = class(order)+1;
 
     for k=1:m %for every observation in the training sample
         a = cell(L,1); %activations
@@ -72,7 +73,8 @@ for e=1:max_epoch
     [~,I] = max(a{end});
     
     %Accuracy
-    F(e,2) = sum((I' == classrnd))/m*100;
+    class_eval = class+1;
+    F(e,2) = sum((I' == class_eval))/n*100;
     
 
 end
