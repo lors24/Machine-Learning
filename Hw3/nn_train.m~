@@ -1,15 +1,14 @@
-function [F,I,results,Xt,classt] = nn_train(name,sizes,tau,kappa,max_epoch,alpha)
-
-[X,Y,class,Xv,Yv,classv,Xt,Yt,classt] = ex3(name);
+function [F,I] = nn_train(X,Y,Xv,Yv,Xt,Yt,classv,classt,sizes,tau,kappa,max_epoch,alpha)
 
 [m, ~] = size(X); %number of training samples
+[n, ~] = size(Xv); %number of validation samples
 
 %F = zeros(max_epoch/alpha,2); %stores results. First
 % column for objective function and second column for accuracy.
 
 %Create network
 [L, weights, biases] = Network(sizes);
-c = 1;
+c = 1
 for e=1:max_epoch
     order = randperm(m);
     Xrnd = X(order,:);
@@ -58,26 +57,22 @@ for e=1:max_epoch
     
     %Feedforward on all data
     if mod(e-1,alpha)==0
-        [error,accuracy] = eval_NN(Xv,Yv,classv,L,weights,biases); 
-        F(c,1) = e;
-        F(c,2) = error;
-        F(c,3) = accuracy;
+        [error,accuracy] = eval_NN(Xv,Yv,L,weights,biases); 
+        F(c,1) = error;
+        F(c,2) = accuracy;
         
         fprintf('Epoch# %d \n', e);
-        fprintf('Error %d \n',F(c,2));
-        fprintf('Accuracy %d \n',F(c,3));
+        fprintf('Error %d \n',F(c,1));
+        fprintf('Accuracy %d \n',F(c,2));
+        c = c+1;
         
-        if e>5*alpha && F(c,2)<=F(c-5,2)
-
+        if e>10*alpha & F(c,2)<=F(c-10,2)
+            
             break
         end
-        c = c+1;
 
     end
 end
-[train_error,train_accuracy] = eval_NN(X,Y,class,L,weights,biases); 
-[test_error,test_accuracy,I] = eval_NN(Xt,Yt,classt,L,weights,biases); 
 
-results = [train_error,train_accuracy; test_error,test_accuracy]
 end
 
